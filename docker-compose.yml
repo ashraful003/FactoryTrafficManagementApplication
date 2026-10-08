@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: factory-traffic-postgres
+    environment:
+      POSTGRES_DB: factory_traffic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ashraful10178
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations/V1__initial_schema.sql:/docker-entrypoint-initdb.d/V1__initial_schema.sql
+      - ./database/migrations/V2__seed_data.sql:/docker-entrypoint-initdb.d/V2__seed_data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d factory_traffic"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: factory-traffic-backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/factory_traffic
+      DB_USERNAME: postgres
+      DB_PASSWORD: ashraful10178
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

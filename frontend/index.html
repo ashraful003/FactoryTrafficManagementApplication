@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Traffic Management System - Garment Facility</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-yellow: #eab308;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .junction-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .junction-picker label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+        }
+
+        .junction-picker select {
+            background: transparent;
+            color: #f8fafc;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .junction-picker select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .badge-yellow { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #eab308; }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .badge-blue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+        .badge-purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid #a855f7; }
+        .badge-orange { background: rgba(249, 115, 22, 0.2); color: #fb923c; border: 1px solid #f97316; }
+        .badge-gray { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #64748b; }
+
+        /* Vehicle Type Badges */
+        .badge-emergency { background: #991b1b; color: #fecaca; border: 1px solid #ef4444; font-weight: 800; }
+        .badge-truck { background: #854d0e; color: #fef08a; border: 1px solid #eab308; }
+        .badge-forklift { background: #0369a1; color: #bae6fd; border: 1px solid #38bdf8; }
+        .badge-employee { background: #334155; color: #cbd5e1; border: 1px solid #64748b; }
+
+        /* Alert Banners */
+        .alert-banner {
+            display: none;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            animation: pulseAlert 1.5s infinite;
+        }
+
+        @keyframes pulseAlert {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; transform: scale(1.002); }
+            100% { opacity: 0.9; }
+        }
+
+        .alert-emergency {
+            background: rgba(239, 68, 68, 0.25);
+            border: 2px solid var(--accent-red);
+            color: #fca5a5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-failure {
+            background: rgba(249, 115, 22, 0.25);
+            border: 2px solid #f97316;
+            color: #fdba74;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Layout Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Status Metrics */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .metrics-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-box {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .metric-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Visual Intersection Crossroad */
+        .intersection-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #0b1120;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .intersection-canvas {
+            position: relative;
+            width: 380px;
+            height: 380px;
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        /* Roads */
+        .road-vertical {
+            position: absolute;
+            left: 130px;
+            top: 0;
+            width: 120px;
+            height: 100%;
+            background: #334155;
+            border-left: 2px dashed #64748b;
+            border-right: 2px dashed #64748b;
+        }
+
+        .road-horizontal {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: #334155;
+            border-top: 2px dashed #64748b;
+            border-bottom: 2px dashed #64748b;
+        }
+
+        .center-cross {
+            position: absolute;
+            left: 130px;
+            top: 130px;
+            width: 120px;
+            height: 120px;
+            background: #273142;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #475569;
+            z-index: 5;
+        }
+
+        /* Traffic Signal Unit */
+        .traffic-light-unit {
+            position: absolute;
+            background: #0f172a;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            padding: 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .traffic-light-unit.vertical {
+            flex-direction: column;
+        }
+
+        .light-bulb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .light-bulb.red.active {
+            background: #ef4444;
+            box-shadow: 0 0 12px #ef4444, 0 0 20px #ef4444;
+        }
+
+        .light-bulb.yellow.active {
+            background: #eab308;
+            box-shadow: 0 0 12px #eab308, 0 0 20px #eab308;
+        }
+
+        .light-bulb.green.active {
+            background: #22c55e;
+            box-shadow: 0 0 12px #22c55e, 0 0 20px #22c55e;
+        }
+
+        /* Intersection Placements */
+        .tl-north { top: 14px; left: 165px; }
+        .tl-south { bottom: 14px; left: 165px; }
+        .tl-west { top: 165px; left: 14px; }
+        .tl-east { top: 165px; right: 14px; }
+
+        .queue-badge-pos {
+            position: absolute;
+            background: #0284c7;
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            z-index: 15;
+            border: 1px solid #38bdf8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .qb-north { top: 88px; left: 166px; }
+        .qb-south { bottom: 88px; left: 166px; }
+        .qb-west { top: 172px; left: 78px; }
+        .qb-east { top: 172px; right: 78px; }
+
+        /* Tables & Forms */
+        .state-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .state-table th, .state-table td {
+            padding: 9px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .state-table th {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        /* Queued Vehicles Summary Grid */
+        .queue-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .queue-summary-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .queue-summary-card .dir-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .queue-summary-card .count-val {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: white;
+            margin: 4px 0;
+        }
+
+        /* Action Buttons */
+        .btn {
+            background: #334155;
+            color: white;
+            border: 1px solid #475569;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: #475569;
+        }
+
+        .btn-primary { background: #0284c7; border-color: #0284c7; }
+        .btn-primary:hover { background: #0369a1; }
+        .btn-danger { background: #dc2626; border-color: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-warning { background: #d97706; border-color: #d97706; }
+        .btn-warning:hover { background: #b45309; }
+        .btn-success { background: #16a34a; border-color: #16a34a; }
+        .btn-success:hover { background: #15803d; }
+        .btn-purple { background: #9333ea; border-color: #9333ea; }
+        .btn-purple:hover { background: #7e22ce; }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        /* Simulation Controls */
+        .sim-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .sim-field label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .sim-field select, .sim-field input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        /* Audit Log */
+        .audit-container {
+            max-height: 280px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #0f172a;
+        }
+
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .audit-table th {
+            position: sticky;
+            top: 0;
+            background: #1e293b;
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+        }
+
+        .audit-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #1e293b;
+            font-family: monospace;
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            border: 1px solid var(--accent-blue);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px -3px rgba(0,0,0,0.7);
+            font-size: 0.85rem;
+            display: none;
+            z-index: 100;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-title">
+        <h1>
+            <span>🚦 Factory Traffic Management System</span>
+        </h1>
+        <p id="subTitleText">Garment Manufacturing Facility - Internal Roadways Control</p>
+    </div>
+
+    <div class="header-actions">
+        <!-- Junction Switcher Dropdown -->
+        <div class="junction-picker">
+            <label for="junctionSelect">Active Junction:</label>
+            <select id="junctionSelect" onchange="changeJunction(this.value)">
+                <option value="A" selected>Junction A (Sewing & Cutting Main Crossroad)</option>
+                <option value="B">Junction B (Warehouse & Finishing Crossroad)</option>
+                <option value="C">Junction C (Shipping & Raw Materials Gate)</option>
+            </select>
+        </div>
+
+        <div class="header-status">
+            <span id="connBadge" class="badge badge-green">LIVE BACKEND</span>
+            <span id="modeBadge" class="badge badge-blue">AUTOMATIC</span>
+            <span id="ctrlBadge" class="badge badge-green">CONTROLLER ONLINE</span>
+        </div>
+    </div>
+</header>
+
+<!-- Emergency Alert Banner -->
+<div id="emergencyBanner" class="alert-banner alert-emergency">
+    <div>
+        <strong>🚨 EMERGENCY VEHICLE PREEMPTION ACTIVE:</strong>
+        <span id="emergencyDetails">Emergency vehicle priority 4 approaching. Clearance in progress.</span>
+    </div>
+    <span class="badge badge-red">PREEMPTION PRIORITY 4</span>
+</div>
+
+<!-- Failure Alert Banner -->
+<div id="failureBanner" class="alert-banner alert-failure">
+    <div>
+        <strong>⚠️ CONTROLLER DEGRADED / HARDWARE OFFLINE:</strong>
+        <span id="failureDetails">Controller acknowledgement delayed or signal state mismatch. Safety fallback active.</span>
+    </div>
+    <span class="badge badge-yellow">SAFETY FALLBACK</span>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Left Column: Visual Intersection, Signals & Queues Breakdown -->
+    <div>
+        <!-- Visual Intersection Card -->
+        <div class="card">
+            <h2>
+                <span id="intersectionCardTitle">Visual Intersection Monitor (Junction A)</span>
+                <span id="phaseDisplay" style="font-size: 0.85rem; color: var(--accent-blue);">NORTH_SOUTH GREEN</span>
+            </h2>
+
+            <div class="metrics-row">
+                <div class="metric-box">
+                    <div class="metric-title">Operating Mode</div>
+                    <div id="metricMode" class="metric-val" style="color: #38bdf8;">AUTOMATIC</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Current Phase</div>
+                    <div id="metricPhase" class="metric-val" style="color: #4ade80;">NORTH_SOUTH</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Transition Step</div>
+                    <div id="metricTransition" class="metric-val" style="color: #94a3b8;">STABLE</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Total Queued</div>
+                    <div id="metricTotalQueue" class="metric-val" style="color: #facc15;">0</div>
+                </div>
+            </div>
+
+            <!-- Intersection Graphical Simulation Canvas -->
+            <div class="intersection-container">
+                <div class="intersection-canvas">
+                    <div class="road-vertical"></div>
+                    <div class="road-horizontal"></div>
+                    <div class="center-cross">
+                        <div id="crossroadName">JUNCTION A</div>
+                        <div id="crossroadMode" style="font-size: 0.7rem; color: #38bdf8; margin-top: 2px;">AUTO</div>
+                    </div>
+
+                    <!-- NORTH Light -->
+                    <div class="traffic-light-unit vertical tl-north">
+                        <div id="tl_north_red" class="light-bulb red"></div>
+                        <div id="tl_north_yellow" class="light-bulb yellow"></div>
+                        <div id="tl_north_green" class="light-bulb green"></div>
+                    </div>
+                    <div id="qb_north" class="queue-badge-pos qb-north">N: 0</div>
+
+                    <!-- SOUTH Light -->
+                    <div class="traffic-light-unit vertical tl-south">
+                        <div id="tl_south_red" class="light-bulb red"></div>
+                        <div id="tl_south_yellow" class="light-bulb yellow"></div>
+                        <div id="tl_south_green" class="light-bulb green"></div>
+                    </div>
+                    <div id="qb_south" class="queue-badge-pos qb-south">S: 0</div>
+
+                    <!-- WEST Light -->
+                    <div class="traffic-light-unit tl-west">
+                        <div id="tl_west_red" class="light-bulb red"></div>
+                        <div id="tl_west_yellow" class="light-bulb yellow"></div>
+                        <div id="tl_west_green" class="light-bulb green"></div>
+                    </div>
+                    <div id="qb_west" class="queue-badge-pos qb-west">W: 0</div>
+
+                    <!-- EAST Light -->
+                    <div class="traffic-light-unit tl-east">
+                        <div id="tl_east_red" class="light-bulb red"></div>
+                        <div id="tl_east_yellow" class="light-bulb yellow"></div>
+                        <div id="tl_east_green" class="light-bulb green"></div>
+                    </div>
+                    <div id="qb_east" class="queue-badge-pos qb-east">E: 0</div>
+                </div>
+            </div>
+
+            <!-- Desired vs Actual Signals Table -->
+            <h3 style="font-size: 0.95rem; margin-top: 16px; margin-bottom: 8px; color: #cbd5e1;">Desired vs Confirmed Actual Signal State</h3>
+            <table class="state-table">
+                <thead>
+                    <tr>
+                        <th>Direction</th>
+                        <th>Desired State</th>
+                        <th>Actual Confirmed</th>
+                        <th>Sync Status</th>
+                        <th>Queue Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>NORTH (Sewing Line 1)</strong></td>
+                        <td id="table_des_north">GREEN</td>
+                        <td id="table_act_north">GREEN</td>
+                        <td id="table_sync_north"><span class="badge badge-green">SYNC</span></td>
+                        <td id="table_q_north">0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SOUTH (Cutting Section)</strong></td>
+                        <td id="table_des_south">GREEN</td>
+                        <td id="table_act_south">GREEN</td>
+                        <td id="table_sync_south"><span class="badge badge-green">SYNC</span></td>
+                        <td id="table_q_south">0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EAST (Storage / Warehouse)</strong></td>
+                        <td id="table_des_east">RED</td>
+                        <td id="table_act_east">RED</td>
+                        <td id="table_sync_east"><span class="badge badge-green">SYNC</span></td>
+                        <td id="table_q_east">0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>WEST (Finishing / Packing)</strong></td>
+                        <td id="table_des_west">RED</td>
+                        <td id="table_act_west">RED</td>
+                        <td id="table_sync_west"><span class="badge badge-green">SYNC</span></td>
+                        <td id="table_q_west">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Queued Vehicles Details Card -->
+        <div class="card">
+            <h2>
+                <span>🚘 Active Queues & Waiting Vehicles Breakdown</span>
+                <span id="queueCountBadge" class="badge badge-blue">0 Vehicles</span>
+            </h2>
+
+            <div class="queue-summary-grid">
+                <div class="queue-summary-card">
+                    <div class="dir-label">NORTH APPROACH</div>
+                    <div class="count-val" id="qs_north">0</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);" id="qs_north_type">-</div>
+                </div>
+                <div class="queue-summary-card">
+                    <div class="dir-label">SOUTH APPROACH</div>
+                    <div class="count-val" id="qs_south">0</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);" id="qs_south_type">-</div>
+                </div>
+                <div class="queue-summary-card">
+                    <div class="dir-label">EAST APPROACH</div>
+                    <div class="count-val" id="qs_east">0</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);" id="qs_east_type">-</div>
+                </div>
+                <div class="queue-summary-card">
+                    <div class="dir-label">WEST APPROACH</div>
+                    <div class="count-val" id="qs_west">0</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);" id="qs_west_type">-</div>
+                </div>
+            </div>
+
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+                <table class="state-table" style="margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th>Direction</th>
+                            <th>Vehicle ID</th>
+                            <th>Vehicle Type</th>
+                            <th>Seq #</th>
+                            <th>Waiting Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehicleQueueTableBody">
+                        <tr><td colspan="5" class="empty-state">No vehicles currently queued</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Manual Control, Simulation Studio & Audit Logs -->
+    <div>
+        <!-- Administrator Manual Control Panel -->
+        <div class="card">
+            <h2>Administrator Manual Override Panel</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                Enforces Safety Invariant: Manual override is always staged safely through YELLOW transition and ALL-RED clearance before granting green.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="sendManualGreen('WEST')">Request WEST Green</button>
+                <button class="btn btn-primary" onclick="sendManualGreen('EAST')">Request EAST Green</button>
+                <button class="btn btn-primary" onclick="sendManualGreen('NORTH')">Request NORTH Green</button>
+                <button class="btn btn-primary" onclick="sendManualGreen('SOUTH')">Request SOUTH Green</button>
+                <button class="btn btn-success" onclick="sendReturnToAutomatic()">Return to Automatic</button>
+            </div>
+        </div>
+
+        <!-- Simulation Studio & Scenario Runner -->
+        <div class="card">
+            <h2>Sensor Event Simulator & Scenarios</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+                Inject vehicle detection events directly to test scheduling, priorities, and controller state:
+            </p>
+
+            <div class="sim-grid">
+                <div class="sim-field">
+                    <label>Event Type</label>
+                    <select id="simEventType">
+                        <option value="VEHICLE_ARRIVED">VEHICLE_ARRIVED</option>
+                        <option value="VEHICLE_CLEARED">VEHICLE_CLEARED</option>
+                    </select>
+                </div>
+                <div class="sim-field">
+                    <label>Direction</label>
+                    <select id="simDirection">
+                        <option value="NORTH">NORTH</option>
+                        <option value="SOUTH">SOUTH</option>
+                        <option value="EAST">EAST</option>
+                        <option value="WEST">WEST</option>
+                    </select>
+                </div>
+                <div class="sim-field">
+                    <label>Vehicle Type (Priority)</label>
+                    <select id="simVehicleType">
+                        <option value="TRUCK">TRUCK (Priority 3 - Heavy)</option>
+                        <option value="FORKLIFT">FORKLIFT (Priority 2 - Internal)</option>
+                        <option value="EMPLOYEE_VEHICLE">EMPLOYEE_VEHICLE (Priority 1 - Standard)</option>
+                        <option value="EMERGENCY">EMERGENCY (Priority 4 - Preemption)</option>
+                    </select>
+                </div>
+                <div class="sim-field">
+                    <label>Vehicle ID</label>
+                    <input type="text" id="simVehicleId" value="FL-101" placeholder="e.g. FL-101">
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 14px;">
+                <button class="btn btn-warning" onclick="submitSimSensorEvent()">Send Sensor Event</button>
+                <button class="btn btn-danger" onclick="triggerEmergencyPreset()">Trigger Emergency Preset</button>
+                <button class="btn" id="btnToggleAutoAck" onclick="toggleAutoAck()">Controller Auto-ACK: ON</button>
+                <button class="btn btn-purple" onclick="runScenario9Burst()">Run Scenario 9 Burst Test</button>
+                <button class="btn" onclick="resetSimulation()">Reset Junction</button>
+            </div>
+
+            <!-- Hardware / Controller Status & ACK Simulation (Section 14.8) -->
+            <h3 style="font-size: 0.9rem; margin-top: 18px; margin-bottom: 6px; color: #cbd5e1; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                Physical Controller Simulation (Section 14.8)
+            </h3>
+            <div class="sim-grid">
+                <div class="sim-field">
+                    <label>Simulate Controller Status</label>
+                    <select id="simControllerStatus">
+                        <option value="ONLINE">ONLINE (Normal Operation)</option>
+                        <option value="OFFLINE">OFFLINE (Controller Failure)</option>
+                        <option value="DEGRADED">DEGRADED (Degraded Mode)</option>
+                        <option value="UNKNOWN">UNKNOWN (Unconfirmed State)</option>
+                    </select>
+                </div>
+                <div class="sim-field" style="display:flex; align-items:flex-end;">
+                    <button class="btn btn-warning" style="width:100%;" onclick="submitSimControllerStatus()">Report Controller Status</button>
+                </div>
+            </div>
+
+            <div class="sim-grid" style="margin-top: 8px;">
+                <div class="sim-field">
+                    <label>Simulate Controller ACK (Command ID)</label>
+                    <input type="text" id="simAckCmdId" value="cmd-8001" placeholder="e.g. cmd-8001">
+                </div>
+                <div class="sim-field">
+                    <label>Confirmed Physical State</label>
+                    <div style="display:flex; gap: 8px;">
+                        <select id="simAckState" style="flex: 1;">
+                            <option value="GREEN">GREEN</option>
+                            <option value="YELLOW">YELLOW</option>
+                            <option value="RED">RED</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="submitSimControllerAck()">Send ACK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Audit Log & Traffic History -->
+        <div class="card">
+            <h2>
+                <span>📜 Recent System Audit & Traffic History</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Real-time log</span>
+            </h2>
+            <div class="audit-container">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event Type</th>
+                            <th>Dir</th>
+                            <th>State Transition / Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: #64748b; padding: 12px;">Loading history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast-message"></div>
+
+<script>
+    const API_BASE = window.location.origin;
+    let currentJunctionId = 'A';
+    let autoAckState = true;
+    let junctionsList = [];
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3200);
+    }
+
+    async function loadJunctionsList() {
+        try {
+            const res = await fetch(`${API_BASE}/api/junctions`);
+            if (res.ok) {
+                junctionsList = await res.json();
+                if (junctionsList.length > 0) {
+                    const sel = document.getElementById('junctionSelect');
+                    sel.innerHTML = junctionsList.map(j => 
+                        `<option value="${j.junction_id}" ${j.junction_id === currentJunctionId ? 'selected' : ''}>` +
+                        `Junction ${j.junction_id}: ${j.name || ('Junction ' + j.junction_id)}</option>`
+                    ).join('');
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load junction list:', e);
+        }
+    }
+
+    function changeJunction(newId) {
+        currentJunctionId = newId;
+        const j = junctionsList.find(item => item.junction_id === newId);
+        const name = j ? j.name : `Junction ${newId}`;
+        document.getElementById('intersectionCardTitle').textContent = `Visual Intersection Monitor (${name})`;
+        document.getElementById('crossroadName').textContent = `JUNCTION ${newId}`;
+        fetchJunctionStatus();
+        fetchAuditHistory();
+        showToast(`Switched view to Junction ${newId}`);
+    }
+
+    async function fetchJunctionStatus() {
+        try {
+            const res = await fetch(`${API_BASE}/api/junctions/${currentJunctionId}/status`);
+            if (!res.ok) throw new Error('Status code: ' + res.status);
+            const data = await res.json();
+            updateDashboard(data);
+            document.getElementById('connBadge').className = 'badge badge-green';
+            document.getElementById('connBadge').textContent = 'LIVE BACKEND';
+        } catch (err) {
+            document.getElementById('connBadge').className = 'badge badge-red';
+            document.getElementById('connBadge').textContent = 'BACKEND OFFLINE';
+        }
+    }
+
+    async function fetchAuditHistory() {
+        try {
+            const res = await fetch(`${API_BASE}/api/junctions/${currentJunctionId}/history?limit=25`);
+            if (!res.ok) return;
+            const list = await res.json();
+            const tbody = document.getElementById('auditTableBody');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:12px; color:#64748b;">No recent events</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(item => {
+                let badgeClass = 'badge-blue';
+                if (item.event_type.includes('EMERGENCY')) badgeClass = 'badge-red';
+                else if (item.event_type.includes('COMPLETED')) badgeClass = 'badge-green';
+                else if (item.event_type.includes('MANUAL')) badgeClass = 'badge-yellow';
+                else if (item.event_type.includes('FAILURE') || item.event_type.includes('TIMEOUT')) badgeClass = 'badge-orange';
+
+                const stateChange = (item.previous_state && item.new_state) 
+                    ? ` (${item.previous_state} &rarr; ${item.new_state})` 
+                    : '';
+
+                return `
+                    <tr>
+                        <td>${new Date(item.timestamp).toLocaleTimeString()}</td>
+                        <td><span class="badge ${badgeClass}" style="font-size:0.68rem;">${item.event_type}</span></td>
+                        <td><strong>${item.direction || '-'}</strong></td>
+                        <td style="color:#cbd5e1;">${(item.details || '-') + stateChange}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Audit fetch error:', e);
+        }
+    }
+
+    async function fetchAutoAckStatus() {
+        try {
+            const res = await fetch(`${API_BASE}/api/simulation/auto-ack`);
+            if (res.ok) {
+                const data = await res.json();
+                autoAckState = data.auto_ack_enabled;
+                const btn = document.getElementById('btnToggleAutoAck');
+                btn.textContent = 'Controller Auto-ACK: ' + (autoAckState ? 'ON' : 'OFF');
+                btn.className = autoAckState ? 'btn btn-success' : 'btn btn-danger';
+            }
+        } catch (e) {}
+    }
+
+    function getVehicleBadge(type) {
+        if (!type) return '<span class="badge badge-gray">UNKNOWN</span>';
+        const t = type.toUpperCase();
+        if (t.includes('EMERGENCY')) return '<span class="badge badge-emergency">🚨 EMERGENCY (P4)</span>';
+        if (t.includes('TRUCK')) return '<span class="badge badge-truck">🚛 TRUCK (P3)</span>';
+        if (t.includes('FORKLIFT')) return '<span class="badge badge-forklift">🚜 FORKLIFT (P2)</span>';
+        return '<span class="badge badge-employee">🚗 EMPLOYEE (P1)</span>';
+    }
+
+    function updateDashboard(data) {
+        // Mode & Phase
+        document.getElementById('metricMode').textContent = data.mode || 'UNKNOWN';
+        document.getElementById('crossroadMode').textContent = data.mode || 'UNKNOWN';
+        document.getElementById('metricPhase').textContent = data.phase || 'NORTH_SOUTH';
+        document.getElementById('metricTransition').textContent = data.transition_state || 'STABLE';
+        document.getElementById('phaseDisplay').textContent = `${data.phase} (${data.transition_state})`;
+
+        // Mode badge
+        const modeBadge = document.getElementById('modeBadge');
+        modeBadge.textContent = data.mode;
+        if (data.mode === 'EMERGENCY') {
+            modeBadge.className = 'badge badge-red';
+        } else if (data.mode === 'MANUAL') {
+            modeBadge.className = 'badge badge-yellow';
+        } else if (data.mode === 'FAILURE' || data.mode === 'DEGRADED') {
+            modeBadge.className = 'badge badge-orange';
+        } else {
+            modeBadge.className = 'badge badge-blue';
+        }
+
+        // Controller status badge
+        const ctrlBadge = document.getElementById('ctrlBadge');
+        ctrlBadge.textContent = 'CONTROLLER ' + (data.controller_status || 'ONLINE');
+        if (data.controller_status === 'ONLINE') {
+            ctrlBadge.className = 'badge badge-green';
+            document.getElementById('failureBanner').style.display = 'none';
+        } else {
+            ctrlBadge.className = 'badge badge-orange';
+            document.getElementById('failureBanner').style.display = 'flex';
+            document.getElementById('failureDetails').textContent = 
+                `Physical signal controller is currently ${data.controller_status}. Safety defaults active.`;
+        }
+
+        // Emergency banner
+        const emgBanner = document.getElementById('emergencyBanner');
+        if (data.active_emergency) {
+            emgBanner.style.display = 'flex';
+            document.getElementById('emergencyDetails').textContent = 
+                `Vehicle approaching from direction: ${data.emergency_direction}. Phase safe preemption active.`;
+        } else {
+            emgBanner.style.display = 'none';
+        }
+
+        // Directional Queues
+        const q = data.queues || {};
+        const qNorth = q.NORTH || 0;
+        const qSouth = q.SOUTH || 0;
+        const qEast = q.EAST || 0;
+        const qWest = q.WEST || 0;
+        const total = qNorth + qSouth + qEast + qWest;
+
+        document.getElementById('metricTotalQueue').textContent = total;
+        document.getElementById('queueCountBadge').textContent = total + ' Vehicles';
+
+        document.getElementById('qb_north').textContent = 'N: ' + qNorth;
+        document.getElementById('qb_south').textContent = 'S: ' + qSouth;
+        document.getElementById('qb_east').textContent = 'E: ' + qEast;
+        document.getElementById('qb_west').textContent = 'W: ' + qWest;
+
+        document.getElementById('qs_north').textContent = qNorth;
+        document.getElementById('qs_south').textContent = qSouth;
+        document.getElementById('qs_east').textContent = qEast;
+        document.getElementById('qs_west').textContent = qWest;
+
+        document.getElementById('table_q_north').textContent = qNorth;
+        document.getElementById('table_q_south').textContent = qSouth;
+        document.getElementById('table_q_east').textContent = qEast;
+        document.getElementById('table_q_west').textContent = qWest;
+
+        // Desired & Actual Signals in Table
+        const des = data.desired_signals || {};
+        const act = data.actual_signals || {};
+        ['NORTH', 'SOUTH', 'EAST', 'WEST'].forEach(dir => {
+            const desVal = des[dir] || 'RED';
+            const actVal = act[dir] || 'RED';
+            const dirLower = dir.toLowerCase();
+
+            const desElem = document.getElementById('table_des_' + dirLower);
+            const actElem = document.getElementById('table_act_' + dirLower);
+            const syncElem = document.getElementById('table_sync_' + dirLower);
+
+            if (desElem) desElem.innerHTML = `<span style="font-weight:700; color:${getColorHex(desVal)}">${desVal}</span>`;
+            if (actElem) actElem.innerHTML = `<span style="font-weight:700; color:${getColorHex(actVal)}">${actVal}</span>`;
+
+            if (syncElem) {
+                if (desVal === actVal) {
+                    syncElem.innerHTML = '<span class="badge badge-green">SYNC</span>';
+                } else {
+                    syncElem.innerHTML = '<span class="badge badge-yellow">ACK PENDING</span>';
+                }
+            }
+        });
+
+        // Intersection graphical bulbs
+        ['north', 'south', 'east', 'west'].forEach(dir => {
+            const color = (act[dir.toUpperCase()] || des[dir.toUpperCase()] || 'RED').toLowerCase();
+            ['red', 'yellow', 'green'].forEach(c => {
+                const bulb = document.getElementById(`tl_${dir}_${c}`);
+                if (bulb) {
+                    if (c === color) bulb.classList.add('active');
+                    else bulb.classList.remove('active');
+                }
+            });
+        });
+
+        // Queued Vehicles Table Breakdown
+        const qVehicles = data.queued_vehicles || {};
+        const allVehicles = [];
+        ['NORTH', 'SOUTH', 'EAST', 'WEST'].forEach(dir => {
+            const list = qVehicles[dir] || [];
+            list.forEach(v => allVehicles.push(v));
+
+            // update highest type in card
+            const typeSummaryElem = document.getElementById(`qs_${dir.toLowerCase()}_type`);
+            if (typeSummaryElem) {
+                if (list.length > 0) {
+                    typeSummaryElem.textContent = list[0].vehicle_type;
+                } else {
+                    typeSummaryElem.textContent = 'None';
+                }
+            }
+        });
+
+        const vTableBody = document.getElementById('vehicleQueueTableBody');
+        if (allVehicles.length === 0) {
+            vTableBody.innerHTML = '<tr><td colspan="5" class="empty-state">No vehicles currently queued in this junction.</td></tr>';
+        } else {
+            vTableBody.innerHTML = allVehicles.map(v => {
+                const waitSec = v.waiting_seconds != null ? v.waiting_seconds : 0;
+                return `
+                    <tr>
+                        <td><strong>${v.direction}</strong></td>
+                        <td style="font-family: monospace; font-weight:700; color: #38bdf8;">${v.vehicle_id}</td>
+                        <td>${getVehicleBadge(v.vehicle_type)}</td>
+                        <td>#${v.sequence_no}</td>
+                        <td style="color: ${waitSec > 60 ? '#f87171' : '#cbd5e1'}; font-weight:600;">
+                            ${waitSec} sec ${waitSec > 60 ? '⚠️' : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    function getColorHex(signal) {
+        if (signal === 'GREEN') return '#4ade80';
+        if (signal === 'YELLOW') return '#facc15';
+        return '#f87171';
+    }
+
+    async function sendManualGreen(direction) {
+        try {
+            const res = await fetch(`${API_BASE}/api/junctions/${currentJunctionId}/commands`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command: 'MANUAL_GREEN_REQUEST',
+                    direction: direction
+                })
+            });
+            const data = await res.json();
+            showToast(`Manual GREEN requested for ${direction} on Junction ${currentJunctionId}`);
+            fetchJunctionStatus();
+            fetchAuditHistory();
+        } catch (e) {
+            showToast('Error requesting manual control: ' + e.message);
+        }
+    }
+
+    async function sendReturnToAutomatic() {
+        try {
+            const res = await fetch(`${API_BASE}/api/junctions/${currentJunctionId}/commands`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command: 'RETURN_TO_AUTOMATIC'
+                })
+            });
+            const data = await res.json();
+            showToast(`Returned Junction ${currentJunctionId} to AUTOMATIC mode`);
+            fetchJunctionStatus();
+            fetchAuditHistory();
+        } catch (e) {
+            showToast('Error returning to automatic: ' + e.message);
+        }
+    }
+
+    async function submitSimSensorEvent() {
+        const eventType = document.getElementById('simEventType').value;
+        const direction = document.getElementById('simDirection').value;
+        const vehicleType = document.getElementById('simVehicleType').value;
+        const vehicleId = document.getElementById('simVehicleId').value || 'VH-' + Math.floor(Math.random() * 900 + 100);
+
+        const payload = {
+            event_id: 'evt-' + Date.now(),
+            junction_id: currentJunctionId,
+            direction: direction,
+            event_type: eventType,
+            vehicle_id: vehicleId,
+            vehicle_type: vehicleType,
+            sequence_no: Math.floor(Math.random() * 5000),
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/api/sensor-events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast(`Sensor event sent: ${vehicleId} (${eventType})`);
+                // Auto-generate next suggested vehicle ID
+                const prefixes = { TRUCK: 'TRK', FORKLIFT: 'FL', EMPLOYEE_VEHICLE: 'EMP', EMERGENCY: 'AMB' };
+                const p = prefixes[vehicleType] || 'VH';
+                document.getElementById('simVehicleId').value = `${p}-${Math.floor(Math.random() * 900 + 100)}`;
+                fetchJunctionStatus();
+                fetchAuditHistory();
+            } else {
+                const err = await res.json();
+                showToast('Error: ' + err.message);
+            }
+        } catch (e) {
+            showToast('Network error: ' + e.message);
+        }
+    }
+
+    async function triggerEmergencyPreset() {
+        const payload = {
+            event_id: 'emg-' + Date.now(),
+            junction_id: currentJunctionId,
+            direction: 'EAST',
+            event_type: 'VEHICLE_ARRIVED',
+            vehicle_id: 'AMB-911',
+            vehicle_type: 'EMERGENCY',
+            sequence_no: 999,
+            timestamp: new Date().toISOString()
+        };
+        try {
+            await fetch(`${API_BASE}/api/sensor-events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showToast(`EMERGENCY ambulance dispatched from EAST on Junction ${currentJunctionId}!`);
+            fetchJunctionStatus();
+            fetchAuditHistory();
+        } catch (e) {
+            showToast('Error: ' + e.message);
+        }
+    }
+
+    async function toggleAutoAck() {
+        autoAckState = !autoAckState;
+        try {
+            await fetch(`${API_BASE}/api/simulation/auto-ack?enabled=${autoAckState}`, { method: 'POST' });
+            fetchAutoAckStatus();
+            showToast('Controller Auto-ACK set to: ' + (autoAckState ? 'ON' : 'OFF'));
+        } catch (e) {
+            showToast('Error: ' + e.message);
+        }
+    }
+
+    async function runScenario9Burst() {
+        showToast(`Running Scenario 9 Concurrent Burst Test on Junction ${currentJunctionId}...`);
+        try {
+            const res = await fetch(`${API_BASE}/api/simulation/concurrency-test?junctionId=${currentJunctionId}`, { method: 'POST' });
+            const data = await res.json();
+            alert('Scenario 9 Burst Test Completed!\n\n' +
+                'Junction: ' + currentJunctionId + '\n' +
+                'Internal Safety Invariant Maintained: ' + data.is_safe_invariant_maintained + '\n' +
+                'No Conflicting Greens: ' + data.no_conflicting_greens + '\n' +
+                'Duplicate Emergency Deduplicated: ' + (data.east_emergency_deduplicated_queue_size === 1) + '\n' +
+                'Active Mode: ' + data.current_mode + '\n\n' +
+                'Execution Log:\n' + data.execution_log.join('\n'));
+            fetchJunctionStatus();
+            fetchAuditHistory();
+        } catch (e) {
+            showToast('Error running test: ' + e.message);
+        }
+    }
+
+    async function resetSimulation() {
+        try {
+            await fetch(`${API_BASE}/api/simulation/reset?junctionId=${currentJunctionId}`, { method: 'POST' });
+            showToast(`Junction ${currentJunctionId} reset to initial state`);
+            fetchJunctionStatus();
+            fetchAuditHistory();
+        } catch (e) {
+            showToast('Error: ' + e.message);
+        }
+    }
+
+    async function submitSimControllerStatus() {
+        const statusVal = document.getElementById('simControllerStatus').value;
+        const payload = {
+            event_id: 'status-' + Date.now(),
+            junction_id: currentJunctionId,
+            device_type: 'SIGNAL_CONTROLLER',
+            direction: document.getElementById('simDirection').value,
+            status: statusVal,
+            timestamp: new Date().toISOString()
+        };
+        try {
+            const res = await fetch(`${API_BASE}/api/controller-events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast(`Reported controller status: ${statusVal}`);
+                fetchJunctionStatus();
+                fetchAuditHistory();
+            } else {
+                const err = await res.json();
+                showToast('Error: ' + err.message);
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message);
+        }
+    }
+
+    async function submitSimControllerAck() {
+        const cmdId = document.getElementById('simAckCmdId').value || 'cmd-8001';
+        const stateVal = document.getElementById('simAckState').value;
+        const payload = {
+            command_id: cmdId,
+            junction_id: currentJunctionId,
+            status: 'ACK',
+            actual_state: stateVal,
+            timestamp: new Date().toISOString()
+        };
+        try {
+            const res = await fetch(`${API_BASE}/api/controller-events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast(`Controller confirmed ${cmdId} -> ${stateVal}`);
+                fetchJunctionStatus();
+                fetchAuditHistory();
+            } else {
+                const err = await res.json();
+                showToast('Error: ' + err.message);
+            }
+        } catch (e) {
+            showToast('Error: ' + e.message);
+        }
+    }
+
+    // Refresh loops
+    setInterval(fetchJunctionStatus, 1000);
+    setInterval(fetchAuditHistory, 2000);
+
+    // Initial load
+    loadJunctionsList().then(() => {
+        fetchJunctionStatus();
+        fetchAuditHistory();
+        fetchAutoAckStatus();
+    });
+</script>
+
+</body>
+</html>

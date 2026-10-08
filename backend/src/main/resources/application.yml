@@ -1,0 +1,41 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: factory-traffic-management
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/factory_traffic}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:ashraful10178}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+traffic:
+  timings:
+    yellow-duration-seconds: 5
+    all-red-duration-seconds: 2
+    ack-timeout-millis: 3000
+    max-command-retries: 2
+  scheduling:
+    queue-weight: 2.0
+    priority-weight: 5.0
+    waiting-weight: 0.5
+    starvation-bonus: 25.0
+    starvation-threshold-seconds: 40
+    switching-threshold: 5.0
+    min-green-seconds: 10
+    max-green-seconds: 60

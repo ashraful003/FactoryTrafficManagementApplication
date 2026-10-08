@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: factory-traffic-test
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:trafficdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+traffic:
+  timings:
+    yellow-duration-seconds: 1
+    all-red-duration-seconds: 1
+    ack-timeout-millis: 1000
+    max-command-retries: 2
+  scheduling:
+    min-green-seconds: 1
+    max-green-seconds: 5
